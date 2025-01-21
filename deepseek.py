@@ -200,3 +200,86 @@ class DeepseekAdvancedNode:
         except Exception as e:
             return (f"Error: {str(e)}",)
 
+class DeepseekReasonerNode:
+    def __init__(self):
+        self.config_path = os.path.join(os.path.dirname(__file__), "config.json")
+        self.load_config()
+        self.message_history = []
+    
+    def load_config(self):
+        """从配置文件加载API密钥"""
+        try:
+            with open(self.config_path, 'r') as f:
+                config = json.load(f)
+                self.api_key = config.get('api_key')
+                self.base_url = config.get('base_url', 'https://api.deepseek.com')
+        except Exception as e:
+            print(f"Error loading config: {e}")
+            self.api_key = None
+            self.base_url = "https://api.deepseek.com"
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "prompt": ("STRING", {"multiline": True}),
+                "clear_history": ("BOOLEAN", {"default": False, "tooltip": "清除历史对话记录"}),
+            },
+            "optional": {
+                "temperature": ("FLOAT", {
+                    "default": 0.7,
+                    "min": 0.0,
+                    "max": 2.0,
+                    "step": 0.1,
+                    "tooltip": "创造性（越大越有创意，越小越严谨）"
+                }),
+            }
+        }
+    
+    RETURN_TYPES = ("STRING", "STRING",)
+    RETURN_NAMES = ("reasoning", "answer",)
+    FUNCTION = "execute"
+    CATEGORY = "💎DeepAide"
+
+    @classmethod
+    def get_icon(cls):
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        icon_path = os.path.join(dir_path, "deepseek_icon.svg")
+        if os.path.exists(icon_path):
+            with open(icon_path, "r") as f:
+                return f.read()
+        return None
+
+    def execute(self, prompt, clear_history=False, temperature=0.7):
+        if not self.api_key:
+            return ("Error: Please configure your API key in config.json", "Error: API key not found")
+        
+        if clear_history:
+            self.message_history = []
+            
+        try:
+            client = OpenAI(
+                api_key=self.api_key,
+                base_url=self.base_url
+            )
+            
+            # 添加新的用户消息
+            self.message_history.append({"role": "user", "content": prompt})
+            
+            response = client.chat.completions.create(
+                model="deepseek-reasoner",
+                messages=self.message_history,
+                temperature=temperature,
+                stream=False
+            )
+            
+            reasoning = response.choices[0].message.reasoning_content
+            answer = response.choices[0].message.content
+            
+            # 将助手的回答添加到历史记录中
+            self.message_history.append({"role": "assistant", "content": answer})
+            
+            return (reasoning, answer,)
+        except Exception as e:
+            return (f"Error: {str(e)}", "Error occurred during API call")
+
