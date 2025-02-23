@@ -1,6 +1,6 @@
 # Comfyui-Deepseek
 About DeepSeek Chat API
-- 2025/02/24 增加siliconflow硅基流版的deepseek节点，v3和R1
+- 2025/02/24 增加siliconflow硅基流版的deepseek节点v3和R1, 这里https://cloud.siliconflow.cn/i/Lvk7qZsq注册申请apikey.
 - Go here to register and get the api-key 
   from https://platform.deepseek.com/ . 
   Then enter api_key in config.json
