@@ -2,7 +2,7 @@
 About DeepSeek Chat API
 - 2025/02/24 增加siliconflow硅基流版的deepseek节点，v3和R1
 - Go here to register and get the api-key 
-  from https://platform.deepseek.com/ 
+  from https://platform.deepseek.com/ . 
   Then enter api_key in config.json
 ![image](https://github.com/user-attachments/assets/e80f0bc8-7eca-4c79-b35b-c41c750ea177)
 ![image](https://github.com/user-attachments/assets/d3c181ba-0322-4098-a9b0-bed8086c1ade)
