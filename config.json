@@ -1,4 +1,6 @@
 {
-    "api_key": "sk-98bbd33bdac34362b9082f6637bd36eb",
-    "base_url": "https://api.deepseek.com"
+    "api_key": "key值",
+    "base_url": "https://api.deepseek.com",
+    "silicon_api_key": "key值",
+    "silicon_base_url": "https://api.siliconflow.cn/v1"
 } 
