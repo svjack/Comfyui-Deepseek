@@ -223,7 +223,10 @@ class DeepseekReasonerNode:
         return {
             "required": {
                 "prompt": ("STRING", {"multiline": True}),
-                "clear_history": ("BOOLEAN", {"default": False, "tooltip": "清除历史对话记录"}),
+                "clear_history": ("BOOLEAN", {
+                    "default": False, 
+                    "tooltip": "清除历史对话记录"
+                }),
             },
             "optional": {
                 "temperature": ("FLOAT", {
@@ -233,6 +236,34 @@ class DeepseekReasonerNode:
                     "step": 0.1,
                     "tooltip": "创造性（越大越有创意，越小越严谨）"
                 }),
+                "max_tokens": ("INT", {
+                    "default": 2048,
+                    "min": 1,
+                    "max": 4096,
+                    "step": 1,
+                    "tooltip": "最大输出长度"
+                }),
+                "top_p": ("FLOAT", {
+                    "default": 1.0,
+                    "min": 0.0,
+                    "max": 1.0,
+                    "step": 0.1,
+                    "tooltip": "采样范围（影响回答的多样性）"
+                }),
+                "frequency_penalty": ("FLOAT", {
+                    "default": 0.0,
+                    "min": -2.0,
+                    "max": 2.0,
+                    "step": 0.1,
+                    "tooltip": "用词重复度（越大越不爱重复用词）"
+                }),
+                "presence_penalty": ("FLOAT", {
+                    "default": 0.0,
+                    "min": -2.0,
+                    "max": 2.0,
+                    "step": 0.1,
+                    "tooltip": "话题重复度（越大越容易换新话题）"
+                })
             }
         }
     
@@ -250,7 +281,9 @@ class DeepseekReasonerNode:
                 return f.read()
         return None
 
-    def execute(self, prompt, clear_history=False, temperature=0.7):
+    def execute(self, prompt, clear_history=False, temperature=0.7, 
+                max_tokens=2048, top_p=1.0,
+                frequency_penalty=0.0, presence_penalty=0.0):
         if not self.api_key:
             return ("Error: Please configure your API key in config.json", "Error: API key not found")
         
@@ -263,21 +296,32 @@ class DeepseekReasonerNode:
                 base_url=self.base_url
             )
             
-            # 添加新的用户消息
-            self.message_history.append({"role": "user", "content": prompt})
+            # 构建请求参数
+            params = {
+                "model": "deepseek-reasoner",
+                "messages": self.message_history + [
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "top_p": top_p,
+                "frequency_penalty": frequency_penalty,
+                "presence_penalty": presence_penalty,
+                "stream": False,
+                "response_format": {"type": "text"}
+            }
             
-            response = client.chat.completions.create(
-                model="deepseek-reasoner",
-                messages=self.message_history,
-                temperature=temperature,
-                stream=False
-            )
+            response = client.chat.completions.create(**params)
             
             reasoning = response.choices[0].message.reasoning_content
             answer = response.choices[0].message.content
             
-            # 将助手的回答添加到历史记录中
-            self.message_history.append({"role": "assistant", "content": answer})
+            # 将助手的回答添加到历史记录
+            self.message_history.append({"role": "user", "content": prompt})
+            self.message_history.append({
+                "role": "assistant",
+                "content": answer
+            })
             
             return (reasoning, answer,)
         except Exception as e:
