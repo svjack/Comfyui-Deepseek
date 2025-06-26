@@ -161,6 +161,15 @@ class DeepseekAdvancedNode:
                 return f.read()
         return None
 
+    import hashlib
+    import time
+    
+    @classmethod
+    def IS_CHANGED(s, image):
+        #always update
+        m = hashlib.sha256().update(str(time.time()).encode("utf-8"))
+        return m.digest().hex()
+
     def execute(self, prompt, system_prompt="You are a helpful assistant", 
                 temperature=1.0, max_tokens=2048, top_p=1.0,
                 frequency_penalty=0.0, presence_penalty=0.0, 
